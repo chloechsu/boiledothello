@@ -1,5 +1,5 @@
+#include <vector>
 #include "player.hpp"
-/* testing git, please ignore this line */
 
 /*
  * Constructor for the player; initialize everything here. The side your AI is
@@ -15,6 +15,12 @@ Player::Player(Side side) {
      * precalculating things, etc.) However, remember that you will only have
      * 30 seconds.
      */
+    board = Board();
+    mySide = side;
+    if (side == WHITE)
+        opSide = BLACK;
+    else
+        opSide = WHITE;
 }
 
 /*
@@ -41,5 +47,23 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
      * TODO: Implement how moves your AI should play here. You should first
      * process the opponent's opponents move before calculating your own move
      */
+    board.doMove(opponentsMove, opSide);
+    if (board.hasMoves(mySide)) {
+        vector<Move> valid_moves;
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                Move move(i,j);
+                if (board.checkMove(&move, mySide))
+                    valid_moves.push_back(move);
+            }
+        }
+        int rand_ind = rand() % valid_moves.size();
+        int X = valid_moves[rand_ind].getX();
+        int Y = valid_moves[rand_ind].getY();
+        Move* m = new Move(X, Y);
+        board.doMove(m, mySide);
+        return m;
+    }
+
     return nullptr;
 }
