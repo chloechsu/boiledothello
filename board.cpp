@@ -178,3 +178,19 @@ void Board::setBoard(char data[]) {
         }
     }
 }
+
+/* 
+ * Heuristic score for give side: 
+ * value of stones on side - value of stones on other side 
+ * corner stones have value 3
+ * stones adjacent to corners have value -3
+ * other stones have value 1
+ */
+int Board::score(Side side) {
+    Side opSide;
+    if (side == WHITE)
+        opSide = BLACK;
+    else
+        opSide = WHITE;
+    return count(side) - count(opSide);
+}

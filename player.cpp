@@ -29,6 +29,22 @@ Player::Player(Side side) {
 Player::~Player() {
 }
 
+/* helper function to adjust heuristic score for moves*/
+int value(int i, int j) {
+    /* use symmetry */
+    if (i >= 4)
+        i = 7 - i;
+    if (j >= 4)
+        j = 7 - j;
+    if (i == 0 && j == 0)
+        return 3;
+    if (i == 0 && j == 1)
+        return -3;
+    if (i == 1 && j == 0)
+        return -3;
+    return 1;
+}
+
 /*
  * Compute the next move given the opponent's last move. Your AI is
  * expected to keep track of the board on its own. If this is the first move,
@@ -49,6 +65,8 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
      */
     board.doMove(opponentsMove, opSide);
     if (board.hasMoves(mySide)) {
+        /*
+        Naive random player:
         vector<Move> valid_moves;
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
@@ -61,8 +79,28 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
         int X = valid_moves[rand_ind].getX();
         int Y = valid_moves[rand_ind].getY();
         Move* m = new Move(X, Y);
-        board.doMove(m, mySide);
-        return m;
+        */
+
+        /* With heuristic score function: */
+        Move* bestMove = nullptr;
+        int maxScore = -100;
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                Move move(i,j);
+                if (board.checkMove(&move, mySide)) {
+                    Board *newBoard = board.copy();
+                    newBoard->doMove(&move, mySide);
+                    int newScore = newBoard->score(mySide) * value(i,j);
+                    if (newScore > maxScore) {
+                        bestMove = new Move(i,j);
+                        maxScore = newScore;
+                    }
+                    delete newBoard;
+                }
+            }
+        }
+        board.doMove(bestMove, mySide);
+        return bestMove;
     }
 
     return nullptr;
