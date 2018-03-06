@@ -210,5 +210,5 @@ std::vector <Move*> Board::generate_moves(Side side) {
             }
         }
     }
-    return moves_list;
+    return move_list;
 }
