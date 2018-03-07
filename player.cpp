@@ -46,16 +46,25 @@ int value(int i, int j) {
     return 1;
 }
 
-int Player::minimax(Board *board, int depth, Side side)
+int Player::minimax(Board *board, int depth, int max_depth, Side side)
 {
     std::vector <Move*> moves_list;
     moves_list = board->generate_moves(side);
     
-    if (depth == 0)
-    {
-        return board->score(side);
-    }
     return 0;
+    /* outline:
+        if depth == max_depth or moves_list == NULL:
+            return board->get_score() // board method to be implemented
+        LOOP through moves_list:
+            best_score = infinity
+            Board *new_board = board
+            new_board->doMove(moves_list[i], side)
+            score = minimax(new_board, depth + 1, max_depth, side)
+            IF score < best_score:
+                best_score = score
+                 
+        return score   
+    */
 }    
 
 /*
