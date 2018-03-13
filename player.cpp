@@ -32,18 +32,16 @@ Player::~Player() {
 
 /* helper function to adjust heuristic score for moves*/
 int value(int i, int j) {
-    /* use symmetry */
-    if (i >= 4)
-        i = 7 - i;
-    if (j >= 4)
-        j = 7 - j;
-    if (i == 0 && j == 0)
-        return 3;
-    if (i == 0 && j == 1)
-        return -3;
-    if (i == 1 && j == 0)
-        return -3;
-    return 1;
+    /* static weights (reference: An Analysis of Heuristics in Othello) */
+    int values[8][8] = {{10, -3, 2, 2, 2, 2, -3, 10},
+                        {-3, -4, -1, -1, -1, -1, -4, -3}, 
+                        {2, -4, 1, 0, 0, 1, -1, 2},
+                        {2, -1, 0, 1, 1, 0, -1, 2},
+                        {2, -1, 0, 1, 1, 0, -1, 2},
+                        {2, -1, 1, 0, 0, 1, -1, 2},
+                        {-3, -4, -1, -1, -1, -1, -4, -3},
+                        {10, -3, 2, 2, 2, 2, -3, 10}};
+    return values[i][j];
 }
 
 std::pair<int, Move*> Player::minimax(Board *board, int depth, int max_depth,
