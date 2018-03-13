@@ -9,7 +9,7 @@ using namespace std;
  */
 Player::Player(Side side) {
     // Will be set to true in test_minimax.cpp.
-    testingMinimax = true;
+    testingMinimax = false;
 
     /*
      * TODO: Do any initialization you need to do here (setting up the board,
@@ -46,8 +46,8 @@ int value(int i, int j) {
     return 1;
 }
 
-int Player::minimax(Board *board, int depth, int max_depth, Side side, int
-        alpha, int beta)
+std::pair<int, Move*> Player::minimax(Board *board, int depth, int max_depth,
+        Side side, int alpha, int beta)
 {
     /* outline:
         if depth == max_depth or moves_list == NULL:
@@ -64,10 +64,15 @@ int Player::minimax(Board *board, int depth, int max_depth, Side side, int
     */
 
     if (depth == max_depth || !board->hasMoves(side)) {
-        return board->score(side);
+        return std::make_pair(board->score(side), nullptr);
     }
 
-    int maxScore = -10000;
+    int bestScore = -1000;
+    if (side == opSide)
+        bestScore = 1000;
+
+    Move* bestmove = nullptr;
+
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
             Move move(i,j);
@@ -75,22 +80,35 @@ int Player::minimax(Board *board, int depth, int max_depth, Side side, int
                 Board *newBoard = board->copy();
                 newBoard->doMove(&move, side);
                 int newScore;
-                if (side == mySide)
-                    newScore = minimax(newBoard, depth+1, max_depth, opSide,
-                            alpha, beta);
-                else
-                    newScore = minimax(newBoard, depth+1, max_depth, mySide,
-                            alpha, beta);
-                if (newScore > maxScore) {
-                    maxScore = newScore;
+                if (side == mySide) {
+                    newScore = minimax(newBoard, depth+1, max_depth,
+                            opSide, alpha, beta).first;
+                    if (newScore > bestScore) {
+                        bestScore = newScore;
+                        if (bestmove != nullptr)
+                            delete bestmove;
+                        bestmove = new Move(i, j);
+                    }
+                    alpha = std::max(bestScore, alpha);
+                }
+                else {
+                    newScore = -minimax(newBoard, depth+1, max_depth,
+                            mySide, alpha, beta).first;
+                    if (newScore < bestScore) {
+                        bestScore = newScore;
+                        if (bestmove != nullptr)
+                            delete bestmove;
+                        bestmove = new Move(i, j);
+                    }
+                    beta = std::min(bestScore, beta);
                 }
                 delete newBoard;
+                if (alpha > beta) 
+                    return std::make_pair(bestScore, bestmove);
             }
         }
     }
-    if (side == mySide)
-        return maxScore;
-    return -maxScore;
+    return std::make_pair(bestScore, bestmove);
 }    
 
 /*
@@ -114,49 +132,10 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
     board.doMove(opponentsMove, opSide);
 
     if (board.hasMoves(mySide)) {
-        /*
-        Naive random player:
-        vector<Move> valid_moves;
-        for (int i = 0; i < 8; i++) {
-            for (int j = 0; j < 8; j++) {
-                Move move(i,j);
-                if (board.checkMove(&move, mySide))
-                    valid_moves.push_back(move);
-            }
-        }
-        int rand_ind = rand() % valid_moves.size();
-        int X = valid_moves[rand_ind].getX();
-        int Y = valid_moves[rand_ind].getY();
-        Move* m = new Move(X, Y);
-        */
-
-        /* With heuristic score function: */
-        Move* bestMove = nullptr;
-        int maxScore = -100;
-        for (int i = 0; i < 8; i++) {
-            for (int j = 0; j < 8; j++) {
-                Move move(i,j);
-                if (board.checkMove(&move, mySide)) {
-                    Board *newBoard = board.copy();
-                    newBoard->doMove(&move, mySide);
-                    int newScore;
-                    if (testingMinimax) 
-                        newScore = minimax(newBoard, 1, 3, opSide, -10000, 10000);
-                    else
-                        newScore = newBoard->score(mySide) * value(i,j);
-
-                    if (newScore > maxScore) {
-                        if (bestMove != nullptr)
-                            delete bestMove;
-                        bestMove = new Move(i,j);
-                        maxScore = newScore;
-                    }
-                    delete newBoard;
-                }
-            }
-        }
-        board.doMove(bestMove, mySide);
-        return bestMove;
+        std::pair<int, Move*> minimax_result = minimax(&board, 0, 3, mySide,
+                -1000, 1000);
+        board.doMove(minimax_result.second, mySide);
+        return minimax_result.second;
     }
 
     return nullptr;
