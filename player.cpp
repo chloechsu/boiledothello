@@ -9,7 +9,7 @@ using namespace std;
  */
 Player::Player(Side side) {
     // Will be set to true in test_minimax.cpp.
-    testingMinimax = false;
+    testingMinimax = true;
 
     /*
      * TODO: Do any initialization you need to do here (setting up the board,
@@ -46,12 +46,9 @@ int value(int i, int j) {
     return 1;
 }
 
-int Player::minimax(Board *board, int depth, int max_depth, Side side)
+int Player::minimax(Board *board, int depth, int max_depth, Side side, int
+        alpha, int beta)
 {
-    std::vector <Move*> moves_list;
-    moves_list = board->generate_moves(side);
-    
-    return 0;
     /* outline:
         if depth == max_depth or moves_list == NULL:
             return board->get_score() // board method to be implemented
@@ -65,6 +62,33 @@ int Player::minimax(Board *board, int depth, int max_depth, Side side)
                  
         return score   
     */
+
+    if (depth == max_depth || !board->hasMoves(side)) {
+        return board->score(side);
+    }
+
+    int maxScore = -10000;
+    for (int i = 0; i < 8; i++) {
+        for (int j = 0; j < 8; j++) {
+            Move move(i,j);
+            if (board->checkMove(&move, side)) {
+                Board *newBoard = board->copy();
+                newBoard->doMove(&move, side);
+                int newScore;
+                if (side == mySide)
+                    newScore = minimax(newBoard, depth+1, max_depth, opSide);
+                else
+                    newScore = minimax(newBoard, depth+1, max_depth, mySide);
+                if (newScore > maxScore) {
+                    maxScore = newScore;
+                }
+                delete newBoard;
+            }
+        }
+    }
+    if (side == mySide)
+        return maxScore;
+    return -maxScore;
 }    
 
 /*
@@ -86,6 +110,7 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
      * process the opponent's opponents move before calculating your own move
      */
     board.doMove(opponentsMove, opSide);
+
     if (board.hasMoves(mySide)) {
         /*
         Naive random player:
@@ -112,8 +137,15 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
                 if (board.checkMove(&move, mySide)) {
                     Board *newBoard = board.copy();
                     newBoard->doMove(&move, mySide);
-                    int newScore = newBoard->score(mySide) * value(i,j);
+                    int newScore;
+                    if (testingMinimax) 
+                        newScore = minimax(newBoard, 1, 3, opSide);
+                    else
+                        newScore = newBoard->score(mySide) * value(i,j);
+
                     if (newScore > maxScore) {
+                        if (bestMove != nullptr)
+                            delete bestMove;
                         bestMove = new Move(i,j);
                         maxScore = newScore;
                     }
