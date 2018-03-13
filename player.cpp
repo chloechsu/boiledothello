@@ -76,9 +76,11 @@ int Player::minimax(Board *board, int depth, int max_depth, Side side, int
                 newBoard->doMove(&move, side);
                 int newScore;
                 if (side == mySide)
-                    newScore = minimax(newBoard, depth+1, max_depth, opSide);
+                    newScore = minimax(newBoard, depth+1, max_depth, opSide,
+                            alpha, beta);
                 else
-                    newScore = minimax(newBoard, depth+1, max_depth, mySide);
+                    newScore = minimax(newBoard, depth+1, max_depth, mySide,
+                            alpha, beta);
                 if (newScore > maxScore) {
                     maxScore = newScore;
                 }
@@ -139,7 +141,7 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
                     newBoard->doMove(&move, mySide);
                     int newScore;
                     if (testingMinimax) 
-                        newScore = minimax(newBoard, 1, 3, opSide);
+                        newScore = minimax(newBoard, 1, 3, opSide, -10000, 10000);
                     else
                         newScore = newBoard->score(mySide) * value(i,j);
 
