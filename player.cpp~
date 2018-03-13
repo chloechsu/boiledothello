@@ -9,7 +9,7 @@ using namespace std;
  */
 Player::Player(Side side) {
     // Will be set to true in test_minimax.cpp.
-    testingMinimax = false;
+    testingMinimax = true;
 
     /*
      * TODO: Do any initialization you need to do here (setting up the board,
@@ -32,26 +32,21 @@ Player::~Player() {
 
 /* helper function to adjust heuristic score for moves*/
 int value(int i, int j) {
-    /* use symmetry */
-    if (i >= 4)
-        i = 7 - i;
-    if (j >= 4)
-        j = 7 - j;
-    if (i == 0 && j == 0)
-        return 3;
-    if (i == 0 && j == 1)
-        return -3;
-    if (i == 1 && j == 0)
-        return -3;
-    return 1;
+    /* static weights (reference: An Analysis of Heuristics in Othello) */
+    int values[8][8] = {{10, -3, 2, 2, 2, 2, -3, 10},
+                        {-3, -4, -1, -1, -1, -1, -4, -3}, 
+                        {2, -4, 1, 0, 0, 1, -1, 2},
+                        {2, -1, 0, 1, 1, 0, -1, 2},
+                        {2, -1, 0, 1, 1, 0, -1, 2,
+                        {2, -1, 1, 0, 0, 1, -1, 2},
+                        {-3, -4, -1, -1, -1, -1, -4, -3},
+                        {10, -3, 2, 2, 2, 2, -3, 10}};
+    return values[i][j];
 }
 
-int Player::minimax(Board *board, int depth, int max_depth, Side side)
+int Player::minimax(Board *board, int depth, int max_depth, Side side, int
+        alpha, int beta)
 {
-    std::vector <Move*> moves_list;
-    moves_list = board->generate_moves(side);
-    
-    return 0;
     /* outline:
         if depth == max_depth or moves_list == NULL:
             return board->get_score() // board method to be implemented
@@ -63,8 +58,37 @@ int Player::minimax(Board *board, int depth, int max_depth, Side side)
             IF score < best_score:
                 best_score = score
                  
-        return score;   
+        return score   
     */
+
+    if (depth == max_depth || !board->hasMoves(side)) {
+        return board->score(side);
+    }
+
+    int maxScore = -10000;
+    for (int i = 0; i < 8; i++) {
+        for (int j = 0; j < 8; j++) {
+            Move move(i,j);
+            if (board->checkMove(&move, side)) {
+                Board *newBoard = board->copy();
+                newBoard->doMove(&move, side);
+                int newScore;
+                if (side == mySide)
+                    newScore = minimax(newBoard, depth+1, max_depth, opSide,
+                            alpha, beta);
+                else
+                    newScore = minimax(newBoard, depth+1, max_depth, mySide,
+                            alpha, beta);
+                if (newScore > maxScore) {
+                    maxScore = newScore;
+                }
+                delete newBoard;
+            }
+        }
+    }
+    if (side == mySide)
+        return maxScore;
+    return -maxScore;
 }    
 
 /*
@@ -86,6 +110,7 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
      * process the opponent's opponents move before calculating your own move
      */
     board.doMove(opponentsMove, opSide);
+
     if (board.hasMoves(mySide)) {
         /*
         Naive random player:
@@ -112,8 +137,15 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
                 if (board.checkMove(&move, mySide)) {
                     Board *newBoard = board.copy();
                     newBoard->doMove(&move, mySide);
-                    int newScore = newBoard->score(mySide) * value(i,j);
+                    int newScore;
+                    if (testingMinimax) 
+                        newScore = minimax(newBoard, 1, 3, opSide, -10000, 10000);
+                    else
+                        newScore = newBoard->score(mySide) * value(i,j);
+
                     if (newScore > maxScore) {
+                        if (bestMove != nullptr)
+                            delete bestMove;
                         bestMove = new Move(i,j);
                         maxScore = newScore;
                     }
