@@ -33,14 +33,14 @@ Player::~Player() {
 /* helper function to adjust heuristic score for moves*/
 int value(int i, int j) {
     /* static weights (reference: An Analysis of Heuristics in Othello) */
-    int values[8][8] = {{10, -3, 2, 2, 2, 2, -3, 10},
+    int values[8][8] = {{4, -3, 2, 2, 2, 2, -3, 4},
                         {-3, -4, -1, -1, -1, -1, -4, -3}, 
                         {2, -4, 1, 0, 0, 1, -1, 2},
                         {2, -1, 0, 1, 1, 0, -1, 2},
                         {2, -1, 0, 1, 1, 0, -1, 2},
                         {2, -1, 1, 0, 0, 1, -1, 2},
                         {-3, -4, -1, -1, -1, -1, -4, -3},
-                        {10, -3, 2, 2, 2, 2, -3, 10}};
+                        {4, -3, 2, 2, 2, 2, -3, 4}};
     return values[i][j];
 }
 
@@ -90,7 +90,7 @@ std::pair<int, Move*> Player::minimax(Board *board, int depth, int max_depth,
                     alpha = std::max(bestScore, alpha);
                 }
                 else {
-                    newScore = -minimax(newBoard, depth+1, max_depth,
+                    newScore = minimax(newBoard, depth+1, max_depth,
                             mySide, alpha, beta).first;
                     if (newScore < bestScore) {
                         bestScore = newScore;
@@ -130,7 +130,7 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
     board.doMove(opponentsMove, opSide);
 
     if (board.hasMoves(mySide)) {
-        std::pair<int, Move*> minimax_result = minimax(&board, 0, 3, mySide,
+        std::pair<int, Move*> minimax_result = minimax(&board, 0, 7, mySide,
                 -1000, 1000);
         board.doMove(minimax_result.second, mySide);
         return minimax_result.second;
